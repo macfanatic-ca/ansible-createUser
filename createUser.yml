@@ -1,0 +1,32 @@
+---
+########################### Target Host(s) ###########################
+# Specify a Single host
+#       hosts: server1
+# Specify a defined group of hosts from hosts inventory
+#       hosts: production
+# Specify a group of hosts
+#       hosts: server1:server2
+########################### Specify Host(s) ##########################
+- hosts:
+########################### Do Not Modify ###########################
+  become: yes
+  vars_files:
+        - ../../vault/createUser.yml
+  tasks:
+
+        - name: Create User
+          user: name={{ createUser_username }} password={{ createUser_password }} comment="{{ createUser_comment }}" update_password=always
+          tags: user
+
+        - name: Grant sudo
+          lineinfile:   dest=/etc/sudoers.d/{{ createUser_username }}_sudo
+                        owner=root
+                        group=root
+                        mode=0440
+                        line="{{ createUser_username }} ALL=(ALL) ALL"
+                        state=present
+                        create=yes
+                        backup=yes
+                        validate='visudo -cf %s'
+          when: createUser_sudoer
+          tags: sudo
